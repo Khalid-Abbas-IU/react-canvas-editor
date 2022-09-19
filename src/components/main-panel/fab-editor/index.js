@@ -2,28 +2,23 @@ import {useEffect, useState} from "react";
 import {fabric} from 'fabric';
 import '../../fabric-overrids'
 import './index.css'
-let canvas, colors=['red','green', 'blue', 'purple'], initialWidthYards = 0,canvasSizeVal=0, perYard = 30,addedObjs=[];
+let canvas, colors=['red','green', 'blue', 'purple'], initialWidthYards = 0,canvasSizeVal=0,addedObjs=[];
 
 const FabEditor = () =>{
 
     const [canvasSize, setCanvasSize] = useState(0)
     const [addedShapes, setAddedShapes] = useState([])
+    const [perYard, setPerYard] = useState(0)
     useEffect(() => {
         inItCanvas();
         window.addEventListener('keyup',onKeyUp)
     },[]);
+
     useEffect(() => {
-    },[addedShapes]);
+    },[perYard]);
 
     const onKeyUp =(e)=>{
-        if (e?.key === 'Enter'){
-            if (canvasSizeVal < initialWidthYards){
-                canvas.setWidth(canvasSizeVal * perYard)
-                // const totalSize = canvasSizeVal * perYard
-                // perYard = canvas.getWidth() * 0.05;
-                canvas.renderAll()
-            }
-        }
+        if (e?.key === 'Enter') setPerYard(canvas.getWidth() / canvasSizeVal);
     }
     
     const inItCanvas =()=>{
@@ -47,10 +42,10 @@ const FabEditor = () =>{
             }
         })
         let width = elWidth,
-            height = elHeight;
-        perYard = width * 0.05;
-        initialWidthYards = width/perYard;
-        setCanvasSize(Math.trunc(width/perYard))
+            height = elHeight,oneYard = width * 0.05;
+        setPerYard(oneYard)
+        initialWidthYards = width/oneYard;
+        setCanvasSize(Math.trunc(width/oneYard))
         canvas.setWidth(width)
         canvas.setHeight(height)
         canvas.renderAll();
@@ -420,18 +415,32 @@ const FabEditor = () =>{
     const confirmShapePosition =()=>{
         const canvasActiveObj = canvas.getActiveObject();
         if (canvasActiveObj){
-            const left = canvasActiveObj.left , top = canvasActiveObj.top ,coordinates = {x: Math.trunc(left / perYard), y: Math.trunc(top / perYard)}
+            let coordinates = "",objAlreadyInd = -1;
+            const left = canvasActiveObj.left ,
+                top = canvasActiveObj.top ,
+                scaledWidth = canvasActiveObj.getScaledWidth(),
+                scaledHeight = canvasActiveObj.getScaledHeight();
             switch (canvasActiveObj.name){
                 case "circle":
-                    addedObjs.push({
-                        name: canvasActiveObj.name,
-                        refId:canvasActiveObj.ref_id,
-                        src:'circle',
-                        coordinates
-                    })
+                    coordinates = `Circle (${Math.trunc(left + scaledWidth/2)}, ${Math.trunc(top + scaledHeight/2)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
+                    objAlreadyInd= addedObjs.findIndex(o=>o.refId === canvasActiveObj.ref_id && o.name === "circle");
+                    if (objAlreadyInd > -1){
+                        addedObjs[objAlreadyInd].coordinates = coordinates;
+                    }else {
+                        addedObjs.push({
+                            name: canvasActiveObj.name,
+                            refId:canvasActiveObj.ref_id,
+                            src:'circle',
+                            coordinates
+                        })
+                    }
+
                     break;
                 case "arrowLine":
-                    addedObjs.push({
+                    coordinates = `Arrow, From (${Math.trunc(left - scaledWidth/2)}, ${Math.trunc(top - scaledHeight/2)}) to (${Math.trunc(left + scaledWidth/2)}, ${Math.trunc(top + scaledHeight / 2)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
+                    objAlreadyInd= addedObjs.findIndex(o=>o.refId === canvasActiveObj.ref_id && o.name === "arrowLine");
+                    if (objAlreadyInd > -1) addedObjs[objAlreadyInd].coordinates = coordinates;
+                    else addedObjs.push({
                         name: canvasActiveObj.name,
                         refId:canvasActiveObj.ref_id,
                         src:'arrow-line',
@@ -439,7 +448,10 @@ const FabEditor = () =>{
                     })
                     break;
                 case "drawLine":
-                    addedObjs.push({
+                    coordinates = `Free Line, From (${Math.trunc(left - scaledWidth/2)}, ${Math.trunc(top - scaledHeight/2)}) to (${Math.trunc(left + scaledWidth/2)}, ${Math.trunc(top + scaledHeight / 2)}) Position,  ${Math.trunc(scaledWidth/ perYard)} Yards.`
+                    objAlreadyInd= addedObjs.findIndex(o=>o.refId === canvasActiveObj.ref_id && o.name === "drawLine");
+                    if (objAlreadyInd > -1) addedObjs[objAlreadyInd].coordinates = coordinates;
+                    else addedObjs.push({
                         name: canvasActiveObj.name,
                         refId:canvasActiveObj.ref_id,
                         src:'curved',
@@ -447,7 +459,10 @@ const FabEditor = () =>{
                     })
                     break;
                 case "crossShape":
-                    addedObjs.push({
+                    coordinates = `Shape (${Math.trunc(left + scaledWidth/2)}, ${Math.trunc(top + scaledHeight/2)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
+                    objAlreadyInd= addedObjs.findIndex(o=>o.refId === canvasActiveObj.ref_id && o.name === "crossShape");
+                    if (objAlreadyInd > -1) addedObjs[objAlreadyInd].coordinates = coordinates;
+                    else addedObjs.push({
                         name: canvasActiveObj.name,
                         refId:canvasActiveObj.ref_id,
                         src:canvasActiveObj.name,
@@ -540,7 +555,7 @@ const FabEditor = () =>{
                                         <img src={`./assets/${src}.png`} height="15" width="35"/>
                                     </div>
                                     <div className="shapes-list-container w-70per content-center" onClick={()=>visibleCanvasObject(name,refId)}>
-                                        ({coordinates.x} , { coordinates.y}) yards Position
+                                        {coordinates}
                                     </div>
                                     <div className="shapes-list-container-cross w-10per content-center" onClick={()=>deleteShapeFromList(name,refId)}>
                                         X
