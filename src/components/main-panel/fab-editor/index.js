@@ -18,7 +18,10 @@ const FabEditor = () =>{
     },[perYard]);
 
     const onKeyUp =(e)=>{
-        if (e?.key === 'Enter') setPerYard(canvas.getWidth() / canvasSizeVal);
+        if (e?.key === 'Enter') {
+            setPerYard(canvas.getWidth() / canvasSizeVal);
+            alert("Canvas Size has been updated successfully")
+        }
     }
     
     const inItCanvas =()=>{
