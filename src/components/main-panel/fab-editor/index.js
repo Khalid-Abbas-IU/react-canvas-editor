@@ -422,7 +422,7 @@ const FabEditor = () =>{
                 scaledHeight = canvasActiveObj.getScaledHeight();
             switch (canvasActiveObj.name){
                 case "circle":
-                    coordinates = `Circle (${Math.trunc(left + scaledWidth/2)}, ${Math.trunc(top + scaledHeight/2)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
+                    coordinates = `Circle (${Math.trunc((left + scaledWidth/2)/perYard)}, ${Math.trunc((top + scaledHeight/2)/ perYard)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
                     objAlreadyInd= addedObjs.findIndex(o=>o.refId === canvasActiveObj.ref_id && o.name === "circle");
                     if (objAlreadyInd > -1){
                         addedObjs[objAlreadyInd].coordinates = coordinates;
@@ -437,7 +437,7 @@ const FabEditor = () =>{
 
                     break;
                 case "arrowLine":
-                    coordinates = `Arrow, From (${Math.trunc(left - scaledWidth/2)}, ${Math.trunc(top - scaledHeight/2)}) to (${Math.trunc(left + scaledWidth/2)}, ${Math.trunc(top + scaledHeight / 2)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
+                    coordinates = `Arrow, From (${Math.trunc((left - scaledWidth/2)/perYard)}, ${Math.trunc((top - scaledHeight/2)/ perYard)}) to (${Math.trunc((left + scaledWidth/2)/ perYard)}, ${Math.trunc((top + scaledHeight / 2) / perYard)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
                     objAlreadyInd= addedObjs.findIndex(o=>o.refId === canvasActiveObj.ref_id && o.name === "arrowLine");
                     if (objAlreadyInd > -1) addedObjs[objAlreadyInd].coordinates = coordinates;
                     else addedObjs.push({
@@ -448,7 +448,7 @@ const FabEditor = () =>{
                     })
                     break;
                 case "drawLine":
-                    coordinates = `Free Line, From (${Math.trunc(left - scaledWidth/2)}, ${Math.trunc(top - scaledHeight/2)}) to (${Math.trunc(left + scaledWidth/2)}, ${Math.trunc(top + scaledHeight / 2)}) Position,  ${Math.trunc(scaledWidth/ perYard)} Yards.`
+                    coordinates = `Free Line, From (${Math.trunc((left - scaledWidth/2)/ perYard)}, ${Math.trunc((top - scaledHeight/2)/ perYard)}) to (${Math.trunc((left + scaledWidth/2)/ perYard)}, ${Math.trunc((top + scaledHeight / 2)/ perYard)}) Position,  ${Math.trunc(scaledWidth/ perYard)} Yards.`
                     objAlreadyInd= addedObjs.findIndex(o=>o.refId === canvasActiveObj.ref_id && o.name === "drawLine");
                     if (objAlreadyInd > -1) addedObjs[objAlreadyInd].coordinates = coordinates;
                     else addedObjs.push({
@@ -459,7 +459,7 @@ const FabEditor = () =>{
                     })
                     break;
                 case "crossShape":
-                    coordinates = `Shape (${Math.trunc(left + scaledWidth/2)}, ${Math.trunc(top + scaledHeight/2)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
+                    coordinates = `Shape (${Math.trunc((left + scaledWidth/2)/ perYard)}, ${Math.trunc((top + scaledHeight/2)/ perYard)}) Position, ${Math.trunc(scaledWidth/ perYard)} Yards.`
                     objAlreadyInd= addedObjs.findIndex(o=>o.refId === canvasActiveObj.ref_id && o.name === "crossShape");
                     if (objAlreadyInd > -1) addedObjs[objAlreadyInd].coordinates = coordinates;
                     else addedObjs.push({
