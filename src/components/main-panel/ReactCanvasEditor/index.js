@@ -2,42 +2,51 @@ import {useEffect, useState} from "react";
 import {fabric} from 'fabric';
 import '../../fabric-overrids'
 import './index.css'
-let canvas, colors=['red','green', 'blue', 'purple'], initialWidthYards = 0,canvasSizeVal=0,addedObjs=[];
+let canvas, colors=['red','green', 'blue', 'purple'],
+    initialWidthYards = 0,canvasSizeVal=0,addedObjs=[];
 
-const FabEditor = () =>{
+const ReactCanvasEditor = () =>{
 
-    const [canvasSize, setCanvasSize] = useState(0)
-    const [addedShapes, setAddedShapes] = useState([])
-    const [perYard, setPerYard] = useState(0)
+    // Declare and initialize component states.
+    const [canvasSize, setCanvasSize] = useState(0)  // State hold canvas updated size
+    const [addedShapes, setAddedShapes] = useState([]) // State hold Added arrow list.
+    const [perYard, setPerYard] = useState(0) // has one yard value
+
+
     useEffect(() => {
+        // Initialize canvas and set dimension.
         inItCanvas();
+
+        // Initialize keyup event for listening event for enter.
         window.addEventListener('keyup',onKeyUp)
     },[]);
 
-    useEffect(() => {
-    },[perYard]);
 
     const onKeyUp =(e)=>{
-        if (e?.key === 'Enter') {
-            setPerYard(canvas.getWidth() / canvasSizeVal);
-            alert("Canvas Size has been updated successfully")
+        if (e?.key === 'Enter') { //  after typed new value of canvas , it listen enter event.
+            setPerYard(canvas.getWidth() / canvasSizeVal); //setPerYard value by dividing canvas width with "canvasSizeVal" new size of canvas.
+            alert("Canvas Size has been updated successfully") // alert for test
         }
     }
     
     const inItCanvas =()=>{
+        // Initialize fabric canvas
         canvas = new fabric.Canvas('canvas',{
             allowTouchScrolling: true,
             backgroundColor:'white',
             selection: false,
         })
+
+        // On canvas events
         onCanvasEvents(canvas)
+        // set canvas height and width
         adjustCanvasDimensions()
-        window.canvas = canvas;
         canvas.renderAll();
     }
 
     const adjustCanvasDimensions=()=>{
         let elHeight = 0, elWidth = 0;
+        // get height and width of canvas-main-wrapper div.
         document.querySelectorAll('div').forEach((el)=>{
             if (el.classList.contains('canvas-main-wrapper')){
                 elWidth = el.clientWidth;
@@ -45,43 +54,22 @@ const FabEditor = () =>{
             }
         })
         let width = elWidth,
-            height = elHeight,oneYard = width * 0.05;
-        setPerYard(oneYard)
-        initialWidthYards = width/oneYard;
+            height = elHeight,
+            oneYard = width * 0.05; // 1yard = canvas width * 0.05
+        setPerYard(oneYard) // set peryard value
+        initialWidthYards = width/oneYard; // divide one yard to width in pixels.
         setCanvasSize(Math.trunc(width/oneYard))
-        canvas.setWidth(width)
-        canvas.setHeight(height)
+        canvas.setWidth(width) // set canvas width
+        canvas.setHeight(height) // set canvas height
         canvas.renderAll();
     }
 
     function onCanvasEvents(canvas){
+        // canvas events
         canvas.on({
-            'object:added': objectAdded,
-            'selection:created': selectionCreated,
-            'selection:updated': selectionUpdated,
-            'object:moving': objectMoving,
-            'object:modified' : modifiedObject,
-            'object:scaling':objectScaling,
-            'object:scaled':objectScaled,
-            'object:rotating':objectRotating,
             'mouse:up':mouseUp,
         })
     }
-
-
-    const objectAdded=(e)=>{
-    }
-    const selectionCreated=()=>{
-    }
-    const selectionUpdated=(e)=>{}
-    const modifiedObject=(e)=>{}
-    const objectScaling=(e)=>{}
-    const objectScaled=(e)=>{}
-    const objectRotating=(e)=>{
-    }
-    const objectMoving=(e)=>{
-    }
-
     const addCircle =()=>{
         if (canvas.getObjects().findIndex(o=>o.name === "circle" && o.opacity) > -1) return;
 
@@ -263,10 +251,11 @@ const FabEditor = () =>{
     }
 
     const updateAfterDraw = () => {
+        if (!canvas.isDrawingMode) return;
         const uuid = require("uuid");
         let id = uuid.v4();
         var path = canvas._objects[canvas._objects.length - 1]
-        if (path && canvas.isDrawingMode) {
+        if (path) {
             // path.perPixelTargetFind = true
             if (path.path) {
                 var x1 = path.path[path.path.length - 2][1]
@@ -572,4 +561,4 @@ const FabEditor = () =>{
         </div>
     );
 }
-export default FabEditor;
+export default ReactCanvasEditor;

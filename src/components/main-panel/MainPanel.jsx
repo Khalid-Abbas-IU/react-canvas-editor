@@ -1,10 +1,10 @@
 import React from 'react';
 import './index.css'
-import FabEditor from "./fab-editor";
+import ReactCanvasEditor from "./ReactCanvasEditor";
 const MainPanel =()=> {
     return (
         <div className={`main-app-panel`}>
-            <FabEditor/>
+            <ReactCanvasEditor/>
         </div>
     );
 }
