@@ -3,7 +3,7 @@ import {fabric} from 'fabric';
 import '../../fabric-overrids'
 import './index.css'
 let canvas, colors=['red','green', 'blue', 'purple'],
-    initialWidthYards = 0,canvasSizeVal=0,addedObjs=[];
+    initialWidthYards = 0,canvasSizeVal=0,addedObjs=[],selectedShapeType = '',isAddingShape = false, initialPointers = {};
 
 const ReactCanvasEditor = () =>{
 
@@ -68,9 +68,11 @@ const ReactCanvasEditor = () =>{
         // canvas events
         canvas.on({
             'mouse:up':mouseUp,
+            'mouse:down':mouseDown,
+            'mouse:move':mouseMove,
         })
     }
-    const addCircle =()=>{
+    const addCircle =(left,top)=>{
         if (canvas.getObjects().findIndex(o=>o.name === "circle" && o.opacity) > -1) return;
 
         const uuid = require("uuid");
@@ -82,14 +84,17 @@ const ReactCanvasEditor = () =>{
             fill: '',
             stroke: 'green',
             strokeWidth: 3,
-            left:canvas.width/2,
-            top:canvas.height/2,
+            originX:'center',
+            originY:'center',
+            left, top,
+            evented:false,
             ref_id:id,
         });
-
+        circle.scaleToWidth(10)
         // Render the circle in canvas
         canvas.add(circle);
-        canvas.setActiveObject(circle);
+
+        // canvas.setActiveObject(circle);
         canvas.renderAll();
     }
     const addCrossShape =()=>{
@@ -287,7 +292,50 @@ const ReactCanvasEditor = () =>{
         }
     }
     const mouseUp =()=>{
+        if (isAddingShape){
+            canvas.getObjects()[0].evented = true;
+            canvas.renderAll();
+        }
+        isAddingShape = false
+        initialPointers = {}
+        selectedShapeType = ''
+
         updateAfterDraw()
+    }
+    const mouseDown =(e)=>{
+        if (!selectedShapeType) return;
+        isAddingShape = true
+        const {x,y} = e.pointer;
+        initialPointers = e.pointer
+        switch (selectedShapeType) {
+            case "circle":
+                addCircle(x,y)
+                break;
+            case "arrowLine":
+
+                break;
+            case "drawLine":
+
+                break;
+            case "crossShape":
+
+                break;
+            default:break;
+        }
+    }
+    const mouseMove =(e)=>{
+        if (isAddingShape){
+            const actObj = canvas.getObjects()[0];
+            if (actObj){
+                const {x,y} = e.pointer;
+                const calcOffsetX = x - initialPointers.x;
+                const calcOffsetY = y - initialPointers.y;
+                actObj.scaleToHeight(calcOffsetY * 2)
+                canvas.renderAll();
+            }
+        }
+        const {x,y} = e.pointer;
+        console.log("e",e.button)
     }
 
 
@@ -474,6 +522,10 @@ const ReactCanvasEditor = () =>{
         }
     }
 
+    const addShapeOnCanvas =(type)=>{
+        selectedShapeType = type
+    }
+
 
     return (
         <div className="fabric-editor-container">
@@ -500,16 +552,16 @@ const ReactCanvasEditor = () =>{
 
                 <section className="section-two flex w-100">
                     <div className="colors-container flex-Col justify-evenly items-center mt-10">
-                        <div className="cursor-pointer" onClick={addArrowLine}>
+                        <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('arrowLine')}>
                             <img src={"./assets/arrow-line.png"} height="24"/>
                         </div>
-                        <div className="cursor-pointer" onClick={addCircle}>
+                        <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('circle')}>
                             <img src={"./assets/circle.png"} height="40"/>
                         </div>
-                        <div className="cursor-pointer" onClick={drawCanvas}>
+                        <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('freeDraw')}>
                             <img src={"./assets/curved.png"} height="40"/>
                         </div>
-                        <div className="cursor-pointer" onClick={addCrossShape}>
+                        <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('crossShape')}>
                             <img src={"/assets/crossShape.png"} height="30"/>
                         </div>
                     </div>
