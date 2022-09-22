@@ -3,14 +3,17 @@ import {fabric} from 'fabric';
 import '../../fabric-overrids'
 import './index.css'
 let canvas, colors=['red','green', 'blue', 'purple'],
-    initialWidthYards = 0,canvasSizeVal=0,addedObjs=[],selectedShapeType = '',isAddingShape = false, initialPointers = {};
+    initialWidthYards = 0,canvasWidthVal=0,canvasHeightVal=0,addedObjs=[],selectedShapeType = '',isAddingShape = false, initialPointers = {};
 
 const ReactCanvasEditor = () =>{
 
     // Declare and initialize component states.
-    const [canvasSize, setCanvasSize] = useState(0)  // State hold canvas updated size
+    const [canvasWidth, setCanvasWidth] = useState(0)  // State hold canvas updated size
+    const [canvasHeight, setCanvasHeight] = useState(0)  // State hold canvas updated size
     const [addedShapes, setAddedShapes] = useState([]) // State hold Added arrow list.
     const [perYard, setPerYard] = useState(0) // has one yard value
+    const [canvasDivWidth, setCanvasDivWidth] = useState(0)
+    const [canvasDivHeight, setCanvasDivHeight] = useState(0)
 
 
     useEffect(() => {
@@ -24,7 +27,8 @@ const ReactCanvasEditor = () =>{
 
     const onKeyUp =(e)=>{
         if (e?.key === 'Enter') { //  after typed new value of canvas , it listen enter event.
-            setPerYard(canvas.getWidth() / canvasSizeVal); //setPerYard value by dividing canvas width with "canvasSizeVal" new size of canvas.
+            setPerYard(canvas.getWidth() / canvasWidthVal); //setPerYard value by dividing canvas width with "canvasSizeVal" new size of canvas.
+
             alert("Canvas Size has been updated successfully") // alert for test
         }
     }
@@ -36,6 +40,8 @@ const ReactCanvasEditor = () =>{
             backgroundColor:'white',
             selection: false,
         })
+
+        window.canvas = canvas;
 
         // On canvas events
         onCanvasEvents(canvas)
@@ -58,7 +64,8 @@ const ReactCanvasEditor = () =>{
             oneYard = width * 0.05; // 1yard = canvas width * 0.05
         setPerYard(oneYard) // set peryard value
         initialWidthYards = width/oneYard; // divide one yard to width in pixels.
-        setCanvasSize(Math.trunc(width/oneYard))
+        setCanvasWidth(Math.trunc(width/oneYard))
+        setCanvasHeight(Math.trunc(height/oneYard))
         canvas.setWidth(width) // set canvas width
         canvas.setHeight(height) // set canvas height
         canvas.renderAll();
@@ -88,6 +95,7 @@ const ReactCanvasEditor = () =>{
             originY:'center',
             left, top,
             evented:false,
+            isAddingMode:true,
             ref_id:id,
         });
         circle.scaleToWidth(10)
@@ -97,11 +105,10 @@ const ReactCanvasEditor = () =>{
         // canvas.setActiveObject(circle);
         canvas.renderAll();
     }
-    const addCrossShape =()=>{
+    const addCrossShape =(left,top)=>{
         if (canvas.getObjects().findIndex(o=>o.name === "crossShape" && o.opacity) > -1) return;
         const uuid = require("uuid");
         let id = uuid.v4();
-        const left = canvas.getWidth() / 2, top = canvas.getHeight() / 2;
         const newPoints = [
             { x: left, y: top },
             { x: left + 12, y: top + 15 },
@@ -128,15 +135,19 @@ const ReactCanvasEditor = () =>{
                 fill: 'blue',
                 strokeWidth: 0,
                 stroke: '',
-                scaleX: 2,
-                scaleY: 2,
+                scaleX: 0.1,
+                scaleY: 0.1,
                 cornerColor: 'blue',
+                evented:false,
                 ref_id: id,
+                originX: 'center',
+                originY: 'center',
                 name: 'crossShape',
+                isAddingMode:true,
             });
 
         canvas.add(crossShape);
-        canvas.setActiveObject(crossShape)
+        // canvas.setActiveObject(crossShape)
         canvas.renderAll();
     }
 
@@ -184,7 +195,7 @@ const ReactCanvasEditor = () =>{
     }
 
     const setArrowAlignment = (x2, y2, tempVal) => {
-        if (tempVal == -1.57) {
+        if (tempVal === -1.57) {
             // 90 degrees
             x2 = x2 - 2
         }
@@ -203,7 +214,7 @@ const ReactCanvasEditor = () =>{
             x2 = x2 + 1.75;
             y2 = y2 + 2;
         }
-        else if (tempVal == 1.57) {
+        else if (tempVal === 1.57) {
             // 360 degrees
             x2 = x2 + 2;
         }
@@ -293,8 +304,14 @@ const ReactCanvasEditor = () =>{
     }
     const mouseUp =()=>{
         if (isAddingShape){
-            canvas.getObjects()[0].evented = true;
-            canvas.renderAll();
+            const canvasObjs = canvas.getObjects();
+            const actObjInd = canvasObjs.findIndex(o=>o.isAddingMode);
+            if (actObjInd > -1){
+                canvasObjs[actObjInd].isAddingMode = false;
+                canvasObjs[actObjInd].evented = true;
+                canvas.setActiveObject(canvasObjs[actObjInd])
+                canvas.renderAll();
+            }
         }
         isAddingShape = false
         initialPointers = {}
@@ -304,70 +321,111 @@ const ReactCanvasEditor = () =>{
     }
     const mouseDown =(e)=>{
         if (!selectedShapeType) return;
-        isAddingShape = true
         const {x,y} = e.pointer;
         initialPointers = e.pointer
         switch (selectedShapeType) {
             case "circle":
                 addCircle(x,y)
+                isAddingShape = true
                 break;
             case "arrowLine":
-
+                reDrawArrowLine({x,y},x,y)
+                isAddingShape = true
                 break;
             case "drawLine":
-
                 break;
             case "crossShape":
-
+                isAddingShape = true
+                addCrossShape(x,y)
                 break;
             default:break;
         }
     }
     const mouseMove =(e)=>{
         if (isAddingShape){
-            const actObj = canvas.getObjects()[0];
+            const actObj = canvas.getObjects().find(o=>o.name === selectedShapeType && o.isAddingMode);
             if (actObj){
                 const {x,y} = e.pointer;
                 const calcOffsetX = x - initialPointers.x;
                 const calcOffsetY = y - initialPointers.y;
-                actObj.scaleToHeight(calcOffsetY * 2)
+                if (actObj.name === "circle" || actObj.name === "crossShape") actObj.scaleToHeight(calcOffsetY * 2)
+                if (actObj.name === "arrowLine") {
+                    reDrawArrowLine(initialPointers,x,y)
+                }
                 canvas.renderAll();
             }
         }
-        const {x,y} = e.pointer;
-        console.log("e",e.button)
     }
 
 
-    const addArrowLine = () => {
-        if (canvas.getObjects().findIndex(o=>o.name === "arrowLine" && o.opacity) > -1) return;
+    const reDrawArrowLine = ({x,y},newX2,newY2) => {
+        const arrowLineInd = canvas.getObjects().findIndex(o=>o.name === "arrowLine" && o.opacity);
+        if (arrowLineInd > -1) {
+            canvas.remove(canvas.getObjects()[arrowLineInd])
+            canvas.renderAll();
+        }
         const uuid = require("uuid");
         let id = uuid.v4();
-        let x1 = 200;
-        let y1 = 200;
-        let x2 = 400;
-        let y2 = 200;
+        let x1 = x;
+        let y1 = y;
+        let x2 = newX2;
+        let y2 = newY2;
         var line = new fabric.Line([x1, y1, x2, y2], {
             stroke: 'black',
             strokeWidth: 3,
-            originX: 'center',
-            originY: 'center',
+            originX:'center',
+            originY:'center',
+            name: "arrow_line",
+        });
+        //
+        var arrow = new fabric.Triangle({
+            left: x2,
+            top: y2,
+            angle: Math.atan2(y1,x2),
+            width: 15,
+            height: 15,
+            originX:'center',
+            originY:'center',
+            fill: 'black',
+            name: "arrow",
+        });
+        const group = new fabric.Group([line,arrow], {
+            name: "arrowLine",
+            originX:'center',
+            originY:'center',
+            evented:false,
+            isAddingMode:true,
+            ref_id: id,
+        });
+        canvas.add(group)
+        canvas.renderAll();
+    }
+
+    const addArrowLine = (x1,y1) => {
+        if (canvas.getObjects().findIndex(o=>o.name === "arrowLine" && o.opacity) > -1) return;
+        const uuid = require("uuid");
+        let id = uuid.v4();
+        // let x1 = 200;
+        // let y1 = 200;
+        let x2 = x1;
+        let y2 = y1;
+        var line = new fabric.Line([x1, y1, x2, y2], {
+            stroke: 'black',
+            strokeWidth: 3,
             hasBorders: false,
             hasControls: false,
             lockScalingX: true,
             lockScalingY: true,
             lockRotation: true,
             selectable: false,
-            left: 200,
-            top: 200,
+            left: x1,
+            top: y1,
             name: "arrow_line",
         });
 
         var arrow = new fabric.Triangle({
-            left: 300,
+            left: x2,
             top: y2,
-            originX: 'center',
-            originY: 'center',
             hasBorders: false,
             hasControls: false,
             lockScalingX: true,
@@ -376,19 +434,20 @@ const ReactCanvasEditor = () =>{
             selectable: false,
             pointType: 'arrow_start',
             angle:90,
-            width: 17,
-            height: 14,
+            originX: 'center',
+            originY: 'center',
+            width: 10,
+            height: 10,
             fill: 'black',
             name: "arrow",
         });
         const group = new fabric.Group([line,arrow], {
-            originX: 'center',
-            originY: 'center',
             name: "arrowLine",
+            evented:false,
             ref_id: id,
         });
         canvas.add(group)
-        canvas.setActiveObject(group)
+        // canvas.setActiveObject(group)
         canvas.renderAll();
     }
 
@@ -412,10 +471,16 @@ const ReactCanvasEditor = () =>{
         canvas.discardActiveObject();
     }
 
-    const changeCanvasSize =(e)=>{
+    const changeCanvasSize =(e,isHeight=false)=>{
         const VAL = e.target.value;
-        canvasSizeVal = VAL
-        setCanvasSize(VAL)
+        if (isHeight) {
+            canvasHeightVal = VAL
+            setCanvasHeight(VAL)
+        }
+        else {
+            canvasWidthVal = VAL;
+            setCanvasWidth(VAL)
+        }
     }
     const visibleCanvasObject =(name,refId)=>{
         const canvasObjects = canvas.getObjects();
@@ -483,7 +548,7 @@ const ReactCanvasEditor = () =>{
                     else addedObjs.push({
                         name: canvasActiveObj.name,
                         refId:canvasActiveObj.ref_id,
-                        src:'arrow-line',
+                        src:'arrowLine',
                         coordinates
                     })
                     break;
@@ -494,7 +559,7 @@ const ReactCanvasEditor = () =>{
                     else addedObjs.push({
                         name: canvasActiveObj.name,
                         refId:canvasActiveObj.ref_id,
-                        src:'curved',
+                        src:'drawLine',
                         coordinates
                     })
                     break;
@@ -540,7 +605,8 @@ const ReactCanvasEditor = () =>{
                     </div>
                     <div className="input-canvas-size content-center">
                         <div className="canvas-size-input">
-                            <input type="text" value={canvasSize} onChange={changeCanvasSize}/>
+                            <input type="text" value={canvasWidth} onChange={changeCanvasSize}/>x
+                            <input type="text" value={canvasHeight} onChange={(e)=>changeCanvasSize(e,true)}/>
                             Yards
                         </div>
                     </div>
@@ -553,13 +619,13 @@ const ReactCanvasEditor = () =>{
                 <section className="section-two flex w-100">
                     <div className="colors-container flex-Col justify-evenly items-center mt-10">
                         <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('arrowLine')}>
-                            <img src={"./assets/arrow-line.png"} height="24"/>
+                            <img src={"./assets/arrowLine.png"} height="24"/>
                         </div>
                         <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('circle')}>
                             <img src={"./assets/circle.png"} height="40"/>
                         </div>
-                        <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('freeDraw')}>
-                            <img src={"./assets/curved.png"} height="40"/>
+                        <div className="cursor-pointer" onClick={drawCanvas}>
+                            <img src={"./assets/drawLine.png"} height="40"/>
                         </div>
                         <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('crossShape')}>
                             <img src={"/assets/crossShape.png"} height="30"/>
@@ -572,7 +638,7 @@ const ReactCanvasEditor = () =>{
                             </div>)
                         }
                     </div>
-                    <div className="canvas-main-wrapper mt-10">
+                    <div className="canvas-main-wrapper mt-10" style={{width:`${canvasDivWidth ? canvasDivWidth + "px" : 80 + "%"}`,height:`${canvasDivHeight ? canvasDivHeight + "px" : 97 + "%"}`}}>
                         <canvas id="canvas"/>
                     </div>
                 </section>
@@ -596,7 +662,7 @@ const ReactCanvasEditor = () =>{
                                 const {name, refId, src, coordinates} = shape;
                                 return <div className="table-row" key={refId}>
                                     <div className="shapes-list-container w-20per content-center" onClick={()=>visibleCanvasObject(name,refId)}>
-                                        <img src={`./assets/${src}.png`} height="15" width="35"/>
+                                        <img src={`./assets/${src}.png`} height="15" width="35" alt="shapeImage"/>
                                     </div>
                                     <div className="shapes-list-container w-70per content-center" onClick={()=>visibleCanvasObject(name,refId)}>
                                         {coordinates}
