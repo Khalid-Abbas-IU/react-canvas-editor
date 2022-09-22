@@ -2,11 +2,11 @@ import React from "react";
 import ShapeDetailNav from "./ShapesDetailNav";
 
 const ShapesListPanel =({addedShapes,visibleCanvasObject,deleteShapeFromList})=>{
-    return <section className="section-three flex w-100">
+    return <section data-testid={'shapeList'} className="section-three flex w-100">
         <ShapeDetailNav/>
         <div className="dimension-table mt-10 w-100">
             {
-                addedShapes.map(shape=>{
+                addedShapes?.length && addedShapes.map(shape=>{
                     const {name, refId, src, coordinates} = shape;
                     return <div className="table-row" key={refId}>
                         <div className="shapes-list-container w-20per content-center" onClick={()=>visibleCanvasObject(name,refId)}>

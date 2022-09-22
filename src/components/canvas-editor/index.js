@@ -397,6 +397,7 @@ const CanvasEditor = () =>{
 
     const changeCanvasSize =(e,isHeight=false)=>{
         const VAL = e.target.value;
+        if(/\D/.test(VAL)) return;
         if (isHeight) {
             canvasHeightVal = VAL
             setCanvasHeight(VAL)
@@ -517,7 +518,7 @@ const CanvasEditor = () =>{
 
 
     return (
-        <div className="editor-main-wrapper">
+        <div data-testid={'mainEditor'} className="editor-main-wrapper">
             <TopSection canvasWidth={canvasWidth} canvasHeight = {canvasHeight} changeCanvasSize={changeCanvasSize} confirmShapePosition={confirmShapePosition}/>
             <MainSection colors={colors} addShapeOnCanvas={addShapeOnCanvas} drawCanvas={drawCanvas} handleChangeColor={handleChangeColor} canvasDivHeight={canvasDivHeight} canvasDivWidth={canvasDivWidth}/>
             <ShapesListPanel addedShapes={addedShapes} deleteShapeFromList={deleteShapeFromList} visibleCanvasObject={visibleCanvasObject}/>

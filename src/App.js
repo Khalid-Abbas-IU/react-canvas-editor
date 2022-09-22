@@ -3,7 +3,7 @@ import CanvasEditor from "./components/canvas-editor";
 
 function App() {
   return (
-    <div className="App">
+    <div data-testid={'mainApp'} className="App">
         <CanvasEditor/>
     </div>
   );
