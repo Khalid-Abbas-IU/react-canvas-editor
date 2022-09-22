@@ -1,18 +1,9 @@
 import React from "react";
+import ShapeDetailNav from "./ShapesDetailNav";
 
 const ShapesListPanel =({addedShapes,visibleCanvasObject,deleteShapeFromList})=>{
     return <section className="section-three flex w-100">
-        <div className="flex justify-space-btw width-inherit mt-10">
-            <div className="label-container content-center w-20per">
-                <span>Shapes</span>
-            </div>
-            <div className="label-container content-center w-70per">
-                <span>co ordinates in yards</span>
-            </div>
-            <div className="label-container content-center w-10per">
-                <span>remove</span>
-            </div>
-        </div>
+        <ShapeDetailNav/>
         <div className="dimension-table mt-10 w-100">
             {
                 addedShapes.map(shape=>{

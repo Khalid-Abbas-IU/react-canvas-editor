@@ -5,6 +5,7 @@ import './index.css'
 import TopSection from './top-section'
 import MainSection from "./main-section";
 import ShapesListPanel from "./shapes-list-panel";
+import {setArrowAlignment} from "../utils";
 let canvas, colors=['red','green', 'blue', 'purple'],
     initialWidthYards = 0,canvasWidthVal=0,canvasHeightVal=0,addedObjs=[],selectedShapeType = '',isAddingShape = false, initialPointers = {};
 
@@ -197,40 +198,6 @@ const CanvasEditor = () =>{
         }
     }
 
-    const setArrowAlignment = (x2, y2, tempVal) => {
-        if (tempVal === -1.57) {
-            // 90 degrees
-            x2 = x2 - 2
-        }
-        else if (-1.57 < tempVal && tempVal < 0) {
-            // between 0 and 90 degrees
-            x2 = x2 - 1.75;
-            y2 = y2 - 2;
-        }
-        else if (tempVal < -1.57) {
-            // between 90 and 180 degrees
-            y2 = y2 + 2;
-            x2 = x2 - 1.75;
-        }
-        else if (tempVal <= 3.14 && tempVal > 1.57) {
-            // between 180 and 270 degrees
-            x2 = x2 + 1.75;
-            y2 = y2 + 2;
-        }
-        else if (tempVal === 1.57) {
-            // 360 degrees
-            x2 = x2 + 2;
-        }
-        else {
-            x2 = x2 + 2;
-            y2 = y2 - 2;
-        }
-
-        return {
-            x2, y2
-        }
-    }
-
     const drawArrow = (x1, y1, x2, y2, type, color, id) => {
         let obj;
         const angle = Math.atan2(y2 - y1, x2 - x1);
@@ -332,7 +299,7 @@ const CanvasEditor = () =>{
                 isAddingShape = true
                 break;
             case "arrowLine":
-                reDrawArrowLine({x,y},x,y)
+                addArrowLine({x,y},x,y)
                 isAddingShape = true
                 break;
             case "drawLine":
@@ -353,7 +320,7 @@ const CanvasEditor = () =>{
                 const calcOffsetY = y - initialPointers.y;
                 if (actObj.name === "circle" || actObj.name === "crossShape") actObj.scaleToHeight(calcOffsetY * 2)
                 if (actObj.name === "arrowLine") {
-                    reDrawArrowLine(initialPointers,x,y)
+                    addArrowLine(initialPointers,x,y)
                 }
                 canvas.renderAll();
             }
@@ -361,7 +328,7 @@ const CanvasEditor = () =>{
     }
 
 
-    const reDrawArrowLine = ({x,y},newX2,newY2) => {
+    const addArrowLine = ({x,y},newX2,newY2) => {
         const arrowLineInd = canvas.getObjects().findIndex(o=>o.name === "arrowLine" && o.opacity);
         if (arrowLineInd > -1) {
             canvas.remove(canvas.getObjects()[arrowLineInd])
@@ -405,56 +372,6 @@ const CanvasEditor = () =>{
             ref_id: id,
         });
         canvas.add(group)
-        canvas.renderAll();
-    }
-
-    const addArrowLine = (x1,y1) => {
-        if (canvas.getObjects().findIndex(o=>o.name === "arrowLine" && o.opacity) > -1) return;
-        const uuid = require("uuid");
-        let id = uuid.v4();
-        // let x1 = 200;
-        // let y1 = 200;
-        let x2 = x1;
-        let y2 = y1;
-        var line = new fabric.Line([x1, y1, x2, y2], {
-            stroke: 'black',
-            strokeWidth: 3,
-            hasBorders: false,
-            hasControls: false,
-            lockScalingX: true,
-            lockScalingY: true,
-            lockRotation: true,
-            selectable: false,
-            left: x1,
-            top: y1,
-            name: "arrow_line",
-        });
-
-        var arrow = new fabric.Triangle({
-            left: x2,
-            top: y2,
-            hasBorders: false,
-            hasControls: false,
-            lockScalingX: true,
-            lockScalingY: true,
-            lockRotation: true,
-            selectable: false,
-            pointType: 'arrow_start',
-            angle:90,
-            originX: 'center',
-            originY: 'center',
-            width: 10,
-            height: 10,
-            fill: 'black',
-            name: "arrow",
-        });
-        const group = new fabric.Group([line,arrow], {
-            name: "arrowLine",
-            evented:false,
-            ref_id: id,
-        });
-        canvas.add(group)
-        // canvas.setActiveObject(group)
         canvas.renderAll();
     }
 
