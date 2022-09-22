@@ -1,4 +1,4 @@
-const TopSection =()=>{
+const TopSection =({canvasWidth,canvasHeight,changeCanvasSize,confirmShapePosition})=>{
     return <section className="section-one flex w-100">
         <div className="label-container content-center">
             <span>Select Shape</span>
@@ -8,7 +8,8 @@ const TopSection =()=>{
         </div>
         <div className="input-canvas-size content-center">
             <div className="canvas-size-input">
-                <input type="text" value={canvasSize} onChange={changeCanvasSize}/>
+                <input type="text" value={canvasWidth} onChange={changeCanvasSize}/>x
+                <input type="text" value={canvasHeight} onChange={(e)=>changeCanvasSize(e,true)}/>
                 Yards
             </div>
         </div>
@@ -17,3 +18,4 @@ const TopSection =()=>{
         </div>
     </section>
 }
+export default TopSection;

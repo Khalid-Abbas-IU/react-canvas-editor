@@ -1,10 +1,10 @@
 import './App.css';
-import MainPanel from "./components/main-panel/MainPanel";
+import CanvasEditor from "./components/canvas-editor";
 
 function App() {
   return (
     <div className="App">
-        <MainPanel/>
+        <CanvasEditor/>
     </div>
   );
 }

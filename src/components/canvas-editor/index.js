@@ -1,11 +1,14 @@
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {fabric} from 'fabric';
-import '../../fabric-overrids'
+import '../fabric-overrids'
 import './index.css'
+import TopSection from './top-section'
+import MainSection from "./main-section";
+import ShapesListPanel from "./shapes-list-panel";
 let canvas, colors=['red','green', 'blue', 'purple'],
     initialWidthYards = 0,canvasWidthVal=0,canvasHeightVal=0,addedObjs=[],selectedShapeType = '',isAddingShape = false, initialPointers = {};
 
-const ReactCanvasEditor = () =>{
+const CanvasEditor = () =>{
 
     // Declare and initialize component states.
     const [canvasWidth, setCanvasWidth] = useState(0)  // State hold canvas updated size
@@ -32,7 +35,7 @@ const ReactCanvasEditor = () =>{
             alert("Canvas Size has been updated successfully") // alert for test
         }
     }
-    
+
     const inItCanvas =()=>{
         // Initialize fabric canvas
         canvas = new fabric.Canvas('canvas',{
@@ -251,8 +254,8 @@ const ReactCanvasEditor = () =>{
                 ref_id: id,
                 originY: 'center',
                 angle: (angle * (180 / (3.142))) - 30,
-                width: 12,
-                height: 12,
+                width: 15,
+                height: 15,
                 fill: color,
                 name: "drawElementArrow",
                 is_animation: false,
@@ -370,6 +373,8 @@ const ReactCanvasEditor = () =>{
         let y1 = y;
         let x2 = newX2;
         let y2 = newY2;
+        var angle = Math.atan2(y2 - y1, x2 - x1);
+        let tempVal = Number.parseFloat(angle).toFixed(2);
         var line = new fabric.Line([x1, y1, x2, y2], {
             stroke: 'black',
             strokeWidth: 3,
@@ -377,11 +382,13 @@ const ReactCanvasEditor = () =>{
             originY:'center',
             name: "arrow_line",
         });
-        //
+
+        x2 = setArrowAlignment(x2, y2, tempVal).x2;
+        y2 = setArrowAlignment(x2, y2, tempVal).y2;
         var arrow = new fabric.Triangle({
             left: x2,
             top: y2,
-            angle: Math.atan2(y1,x2),
+            angle: (angle * (180 / (3.142))) - 30,
             width: 15,
             height: 15,
             originX:'center',
@@ -593,90 +600,11 @@ const ReactCanvasEditor = () =>{
 
 
     return (
-        <div className="fabric-editor-container">
-            <div className="editor-main-wrapper">
-
-                <section className="section-one flex w-100">
-                    <div className="label-container content-center">
-                        <span>Select Shape</span>
-                    </div>
-                    <div className="label-container content-center">
-                        <span>Select Color</span>
-                    </div>
-                    <div className="input-canvas-size content-center">
-                        <div className="canvas-size-input">
-                            <input type="text" value={canvasWidth} onChange={changeCanvasSize}/>x
-                            <input type="text" value={canvasHeight} onChange={(e)=>changeCanvasSize(e,true)}/>
-                            Yards
-                        </div>
-                    </div>
-                    <div className="label-container confirm-button content-center" onClick={confirmShapePosition}>
-                        <span>CONFIRM</span>
-                    </div>
-                </section>
-
-
-                <section className="section-two flex w-100">
-                    <div className="colors-container flex-Col justify-evenly items-center mt-10">
-                        <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('arrowLine')}>
-                            <img src={"./assets/arrowLine.png"} height="24"/>
-                        </div>
-                        <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('circle')}>
-                            <img src={"./assets/circle.png"} height="40"/>
-                        </div>
-                        <div className="cursor-pointer" onClick={drawCanvas}>
-                            <img src={"./assets/drawLine.png"} height="40"/>
-                        </div>
-                        <div className="cursor-pointer" onClick={()=>addShapeOnCanvas('crossShape')}>
-                            <img src={"/assets/crossShape.png"} height="30"/>
-                        </div>
-                    </div>
-                    <div className="colors-container flex-Col justify-evenly items-center mt-10">
-                        {
-                            colors.map((color,i) => <div key={i} className="color-box-container content-center cursor-pointer" onClick={()=>handleChangeColor(color)}>
-                                <div className="color-box" style={{backgroundColor:color}}/>
-                            </div>)
-                        }
-                    </div>
-                    <div className="canvas-main-wrapper mt-10" style={{width:`${canvasDivWidth ? canvasDivWidth + "px" : 80 + "%"}`,height:`${canvasDivHeight ? canvasDivHeight + "px" : 97 + "%"}`}}>
-                        <canvas id="canvas"/>
-                    </div>
-                </section>
-
-
-                <section className="section-three flex w-100">
-                    <div className="flex justify-space-btw width-inherit mt-10">
-                        <div className="label-container content-center w-20per">
-                            <span>Shapes</span>
-                        </div>
-                        <div className="label-container content-center w-70per">
-                            <span>co ordinates in yards</span>
-                        </div>
-                        <div className="label-container content-center w-10per">
-                            <span>remove</span>
-                        </div>
-                    </div>
-                    <div className="dimension-table mt-10 w-100">
-                        {
-                            addedShapes.map(shape=>{
-                                const {name, refId, src, coordinates} = shape;
-                                return <div className="table-row" key={refId}>
-                                    <div className="shapes-list-container w-20per content-center" onClick={()=>visibleCanvasObject(name,refId)}>
-                                        <img src={`./assets/${src}.png`} height="15" width="35" alt="shapeImage"/>
-                                    </div>
-                                    <div className="shapes-list-container w-70per content-center" onClick={()=>visibleCanvasObject(name,refId)}>
-                                        {coordinates}
-                                    </div>
-                                    <div className="shapes-list-container-cross w-10per content-center" onClick={()=>deleteShapeFromList(name,refId)}>
-                                        X
-                                    </div>
-                                </div>
-                            })
-                        }
-                    </div>
-                </section>
-            </div>
+        <div className="editor-main-wrapper">
+            <TopSection canvasWidth={canvasWidth} canvasHeight = {canvasHeight} changeCanvasSize={changeCanvasSize} confirmShapePosition={confirmShapePosition}/>
+            <MainSection colors={colors} addShapeOnCanvas={addShapeOnCanvas} drawCanvas={drawCanvas} handleChangeColor={handleChangeColor} canvasDivHeight={canvasDivHeight} canvasDivWidth={canvasDivWidth}/>
+            <ShapesListPanel addedShapes={addedShapes} deleteShapeFromList={deleteShapeFromList} visibleCanvasObject={visibleCanvasObject}/>
         </div>
     );
 }
-export default ReactCanvasEditor;
+export default CanvasEditor;
